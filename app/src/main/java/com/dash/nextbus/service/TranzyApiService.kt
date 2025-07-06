@@ -1,19 +1,18 @@
 package com.dash.nextbus.service
 
-import android.util.Log
 import com.dash.nextbus.model.Agency
 import com.dash.nextbus.model.Stop
 import com.dash.nextbus.model.StopTime
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.google.gson.FieldNamingPolicy
+import com.google.gson.GsonBuilder
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Header
+
 
 interface TranzyApiService {
     @GET("opendata/agency")
@@ -44,10 +43,14 @@ object RetrofitClient {
         .addInterceptor(headerInterceptor)
         .build()
 
+    private val gson = GsonBuilder()
+        .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+        .create()
+
     private val retrofit = Retrofit.Builder()
         .baseUrl(BASE_URL)
         .client(client)
-        .addConverterFactory(GsonConverterFactory.create())
+        .addConverterFactory(GsonConverterFactory.create(gson))
         .build()
 
     val api: TranzyApiService = retrofit.create(TranzyApiService::class.java)

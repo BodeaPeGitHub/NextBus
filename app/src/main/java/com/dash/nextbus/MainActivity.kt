@@ -4,16 +4,32 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dash.nextbus.model.Agency
-import com.dash.nextbus.service.RetrofitClient
 import com.dash.nextbus.ui.AgencyViewModel
 import com.dash.nextbus.ui.theme.NextBusTheme
 
@@ -66,7 +82,7 @@ fun StationSelectorScreen(
             onExpandedChange = { agencyDropdownExpanded = !agencyDropdownExpanded }
         ) {
             TextField(
-                value = selectedAgency?.agency_name ?: "",
+                value = selectedAgency?.agencyName ?: "",
                 onValueChange = {},
                 readOnly = true,
                 label = { Text("Choose city") },
@@ -83,12 +99,12 @@ fun StationSelectorScreen(
             ) {
                 agencies.forEach { agency ->
                     DropdownMenuItem(
-                        text = { Text(agency.agency_name) },
+                        text = { Text(agency.agencyName) },
                         onClick = {
                             selectedAgency = agency
                             selectedStop = ""
                             agencyDropdownExpanded = false
-                            agencyViewModel.fetchStops(agency.agency_id)
+                            agencyViewModel.fetchStops(agency.agencyId)
                         }
                     )
                 }
@@ -121,9 +137,9 @@ fun StationSelectorScreen(
                 ) {
                     stops.forEach { stop ->
                         DropdownMenuItem(
-                            text = { Text(stop.stop_name) },
+                            text = { Text(stop.stopName) },
                             onClick = {
-                                selectedStop = stop.stop_name
+                                selectedStop = stop.stopName
                                 stopDropdownExpanded = false
                             }
                         )
@@ -152,7 +168,7 @@ fun StationSelectorScreen(
         }
         if (selectedStop.isNotEmpty()) {
             // Filter stopTimes by selectedStop's stop_id or stop_name
-            val filteredBuses = stopTimes.filter { it.stop_headsign == selectedStop || it.stop_id.toString() == selectedStop }
+            val filteredBuses = stopTimes.filter { it.stopHeadsign == selectedStop || it.stopId.toString() == selectedStop }
 
             Text("Select Bus:")
 
@@ -179,9 +195,9 @@ fun StationSelectorScreen(
                 ) {
                     filteredBuses.forEach { stopTime ->
                         DropdownMenuItem(
-                            text = { Text(stopTime.trip_id) }, // or any other bus identifier
+                            text = { Text(stopTime.tripId) }, // or any other bus identifier
                             onClick = {
-                                selectedBus = stopTime.trip_id
+                                selectedBus = stopTime.tripId
                                 busDropdownExpanded = false
                             }
                         )

@@ -1,9 +1,9 @@
 package com.dash.nextbus.model
 
 data class StopTime(
-    val trip_id: String,
-    val arrival_time: String,
-    val departure_time: String,
-    val stop_id: Int,
-    val stop_headsign: String
+    val tripId: String,
+    val arrivalTime: String,
+    val departureTime: String,
+    val stopId: Int,
+    val stopHeadsign: String
 )

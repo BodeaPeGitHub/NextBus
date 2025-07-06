@@ -1,6 +1,9 @@
 package com.dash.nextbus.service
 
+import android.util.Log
 import com.dash.nextbus.model.Agency
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -40,17 +43,4 @@ object RetrofitClient {
 
     val api: TranzyApiService = retrofit.create(TranzyApiService::class.java)
 
-    suspend fun canReachGoogle(): Boolean {
-        return try {
-            val testClient = OkHttpClient()
-            val request = Request.Builder()
-                .url("https://clients3.google.com/generate_204")
-                .build()
-
-            val response: Response = testClient.newCall(request).execute()
-            response.isSuccessful
-        } catch (e: Exception) {
-            false
-        }
-    }
 }

@@ -35,12 +35,7 @@ fun StationSelectorScreen(
     modifier: Modifier = Modifier,
     agencyViewModel: AgencyViewModel = viewModel()
 ) {
-    var hasInternet by remember { mutableStateOf<Boolean?>(null) }
-
-    // Launch internet check once when composable enters composition
-    LaunchedEffect(Unit) {
-        hasInternet = RetrofitClient.canReachGoogle()
-    }
+    var hasInternet by remember { mutableStateOf<Boolean?>(true) }
 
     when (hasInternet) {
         null -> {

@@ -39,7 +39,10 @@ fun StationSelectorScreen(
     val agencies by agencyViewModel.agencies.collectAsState()
     val stops by agencyViewModel.stops.collectAsState()
     val error by agencyViewModel.errorMessage.collectAsState()
-
+    val stopTimes by agencyViewModel.stopTimes.collectAsState()
+    var selectedBus by remember { mutableStateOf<String?>(null) }
+    var busDropdownExpanded by remember { mutableStateOf(false) }
+    val favoriteBuses = remember { mutableStateListOf<String>() }
 
     var selectedAgency by remember { mutableStateOf<Agency?>(null) }
     var agencyDropdownExpanded by remember { mutableStateOf(false) }
@@ -147,7 +150,64 @@ fun StationSelectorScreen(
                 Text("• $station")
             }
         }
+        if (selectedStop.isNotEmpty()) {
+            // Filter stopTimes by selectedStop's stop_id or stop_name
+            val filteredBuses = stopTimes.filter { it.stop_headsign == selectedStop || it.stop_id.toString() == selectedStop }
 
+            Text("Select Bus:")
+
+            ExposedDropdownMenuBox(
+                expanded = busDropdownExpanded,
+                onExpandedChange = { busDropdownExpanded = !busDropdownExpanded }
+            ) {
+                TextField(
+                    value = selectedBus ?: "",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Choose bus") },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = busDropdownExpanded)
+                    },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = busDropdownExpanded,
+                    onDismissRequest = { busDropdownExpanded = false }
+                ) {
+                    filteredBuses.forEach { stopTime ->
+                        DropdownMenuItem(
+                            text = { Text(stopTime.trip_id) }, // or any other bus identifier
+                            onClick = {
+                                selectedBus = stopTime.trip_id
+                                busDropdownExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            if (!selectedBus.isNullOrEmpty()) {
+                Button(
+                    onClick = {
+                        if (!favoriteBuses.contains(selectedBus!!)) {
+                            favoriteBuses.add(selectedBus!!)
+                        }
+                    }
+                ) {
+                    Text("Add Bus to Favorites")
+                }
+            }
+
+            if (favoriteBuses.isNotEmpty()) {
+                Text("Favorite Buses:")
+                favoriteBuses.forEach { bus ->
+                    Text("• $bus")
+                }
+            }
+        }
         error?.let {
             Text("Error: $it", color = MaterialTheme.colorScheme.error)
         }

@@ -3,6 +3,7 @@ package com.dash.nextbus.service
 import android.util.Log
 import com.dash.nextbus.model.Agency
 import com.dash.nextbus.model.Stop
+import com.dash.nextbus.model.StopTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.Interceptor
@@ -20,6 +21,9 @@ interface TranzyApiService {
 
     @GET("opendata/stops")
     suspend fun getStops(@Header("X-Agency-Id") agencyId: Int): List<Stop>
+
+    @GET("opendata/stop_times")
+    suspend fun getStopTimes(@Header("X-Agency-Id") agencyId: String): List<StopTime>
 }
 
 object RetrofitClient {

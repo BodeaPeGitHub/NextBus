@@ -49,13 +49,16 @@ class AgencyViewModel : ViewModel() {
             }
         }
     }
-    fun fetchStopTimes(agencyId: String) {
+    fun fetchStopTimes(agencyId: Int, stopId: Int) {
         viewModelScope.launch {
             try {
                 val response = withContext(Dispatchers.IO) {
                     RetrofitClient.api.getStopTimes(agencyId)
                 }
-                _stopTimes.value = response
+                val filteredStopTimes = response.filter {
+                    it.stopId == stopId
+                }
+                _stopTimes.value = filteredStopTimes
             } catch (e: Exception) {
                 _errorMessage.value = "Error loading stop times: ${e.message}"
             }

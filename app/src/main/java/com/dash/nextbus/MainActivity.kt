@@ -30,6 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dash.nextbus.model.Agency
+import com.dash.nextbus.model.Stop
 import com.dash.nextbus.ui.AgencyViewModel
 import com.dash.nextbus.ui.theme.NextBusTheme
 
@@ -54,19 +55,20 @@ fun StationSelectorScreen(
 ) {
     val agencies by agencyViewModel.agencies.collectAsState()
     val stops by agencyViewModel.stops.collectAsState()
-    val error by agencyViewModel.errorMessage.collectAsState()
     val stopTimes by agencyViewModel.stopTimes.collectAsState()
-    var selectedBus by remember { mutableStateOf<String?>(null) }
-    var busDropdownExpanded by remember { mutableStateOf(false) }
-    val favoriteBuses = remember { mutableStateListOf<String>() }
+    val error by agencyViewModel.errorMessage.collectAsState()
 
     var selectedAgency by remember { mutableStateOf<Agency?>(null) }
     var agencyDropdownExpanded by remember { mutableStateOf(false) }
 
-    var selectedStop by remember { mutableStateOf("") }
+    var selectedStop by remember { mutableStateOf<Stop?>(null) }
     var stopDropdownExpanded by remember { mutableStateOf(false) }
 
+    var selectedBus by remember { mutableStateOf<String?>(null) }
+    var busDropdownExpanded by remember { mutableStateOf(false) }
+
     val favoriteStops = remember { mutableStateListOf<String>() }
+    val favoriteBuses = remember { mutableStateListOf<String>() }
 
     Column(
         modifier = modifier
@@ -102,7 +104,8 @@ fun StationSelectorScreen(
                         text = { Text(agency.agencyName) },
                         onClick = {
                             selectedAgency = agency
-                            selectedStop = ""
+                            selectedStop = null
+                            selectedBus = null
                             agencyDropdownExpanded = false
                             agencyViewModel.fetchStops(agency.agencyId)
                         }
@@ -114,12 +117,13 @@ fun StationSelectorScreen(
         if (selectedAgency != null) {
             Text("Select Station:")
 
+            // Stop dropdown
             ExposedDropdownMenuBox(
                 expanded = stopDropdownExpanded,
                 onExpandedChange = { stopDropdownExpanded = !stopDropdownExpanded }
             ) {
                 TextField(
-                    value = selectedStop,
+                    value = selectedStop?.stopName ?: "",
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Choose station") },
@@ -139,8 +143,10 @@ fun StationSelectorScreen(
                         DropdownMenuItem(
                             text = { Text(stop.stopName) },
                             onClick = {
-                                selectedStop = stop.stopName
+                                selectedStop = stop
+                                selectedBus = null
                                 stopDropdownExpanded = false
+                                agencyViewModel.fetchStopTimes(selectedAgency!!.agencyId, stop.stopId)
                             }
                         )
                     }
@@ -148,11 +154,12 @@ fun StationSelectorScreen(
             }
         }
 
-        if (selectedStop.isNotEmpty()) {
+        if (selectedStop != null) {
             Button(
                 onClick = {
-                    if (!favoriteStops.contains(selectedStop)) {
-                        favoriteStops.add(selectedStop)
+                    val stopName = selectedStop!!.stopName
+                    if (!favoriteStops.contains(stopName)) {
+                        favoriteStops.add(stopName)
                     }
                 }
             ) {
@@ -166,12 +173,11 @@ fun StationSelectorScreen(
                 Text("• $station")
             }
         }
-        if (selectedStop.isNotEmpty()) {
-            // Filter stopTimes by selectedStop's stop_id or stop_name
-            val filteredBuses = stopTimes.filter { it.stopHeadsign == selectedStop || it.stopId.toString() == selectedStop }
 
+        if (selectedStop != null) {
             Text("Select Bus:")
 
+            // Bus dropdown
             ExposedDropdownMenuBox(
                 expanded = busDropdownExpanded,
                 onExpandedChange = { busDropdownExpanded = !busDropdownExpanded }
@@ -193,9 +199,9 @@ fun StationSelectorScreen(
                     expanded = busDropdownExpanded,
                     onDismissRequest = { busDropdownExpanded = false }
                 ) {
-                    filteredBuses.forEach { stopTime ->
+                    stopTimes.forEach { stopTime ->
                         DropdownMenuItem(
-                            text = { Text(stopTime.tripId) }, // or any other bus identifier
+                            text = { Text(stopTime.tripId) },
                             onClick = {
                                 selectedBus = stopTime.tripId
                                 busDropdownExpanded = false
@@ -224,6 +230,7 @@ fun StationSelectorScreen(
                 }
             }
         }
+
         error?.let {
             Text("Error: $it", color = MaterialTheme.colorScheme.error)
         }

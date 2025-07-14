@@ -22,7 +22,7 @@ interface TranzyApiService {
     suspend fun getStops(@Header("X-Agency-Id") agencyId: Int): List<Stop>
 
     @GET("opendata/stop_times")
-    suspend fun getStopTimes(@Header("X-Agency-Id") agencyId: String): List<StopTime>
+        suspend fun getStopTimes(@Header("X-Agency-Id") agencyId: Int): List<StopTime>
 }
 
 object RetrofitClient {

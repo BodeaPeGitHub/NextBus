@@ -1,8 +1,10 @@
 package com.dash.nextbus.service
 
 import com.dash.nextbus.model.Agency
+import com.dash.nextbus.model.Route
 import com.dash.nextbus.model.Stop
 import com.dash.nextbus.model.StopTime
+import com.dash.nextbus.model.Trip
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
 import okhttp3.Interceptor
@@ -22,7 +24,13 @@ interface TranzyApiService {
     suspend fun getStops(@Header("X-Agency-Id") agencyId: Int): List<Stop>
 
     @GET("opendata/stop_times")
-        suspend fun getStopTimes(@Header("X-Agency-Id") agencyId: Int): List<StopTime>
+    suspend fun getStopTimes(@Header("X-Agency-Id") agencyId: Int): List<StopTime>
+
+    @GET("opendata/trips")
+    suspend fun getTrips(@Header("X-Agency-Id") agencyId: Int): List<Trip>
+
+    @GET("opendata/routes")
+    suspend fun getRoutes(@Header("X-Agency-Id") agencyId: Int): List<Route>
 }
 
 object RetrofitClient {

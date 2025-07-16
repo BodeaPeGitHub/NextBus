@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -33,6 +34,7 @@ import com.dash.nextbus.model.Agency
 import com.dash.nextbus.model.Stop
 import com.dash.nextbus.ui.AgencyViewModel
 import com.dash.nextbus.ui.theme.NextBusTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,7 +58,10 @@ fun StationSelectorScreen(
     val agencies by agencyViewModel.agencies.collectAsState()
     val stops by agencyViewModel.stops.collectAsState()
     val stopTimes by agencyViewModel.stopTimes.collectAsState()
+    val trips by agencyViewModel.trips.collectAsState()
+    val routes by agencyViewModel.routes.collectAsState()
     val error by agencyViewModel.errorMessage.collectAsState()
+    val scope = rememberCoroutineScope()
 
     var selectedAgency by remember { mutableStateOf<Agency?>(null) }
     var agencyDropdownExpanded by remember { mutableStateOf(false) }
@@ -146,7 +151,14 @@ fun StationSelectorScreen(
                                 selectedStop = stop
                                 selectedBus = null
                                 stopDropdownExpanded = false
-                                agencyViewModel.fetchStopTimes(selectedAgency!!.agencyId, stop.stopId)
+                                scope.launch {
+                                    agencyViewModel.fetchStopTimes(
+                                        selectedAgency!!.agencyId,
+                                        stop.stopId
+                                    ).join()
+                                    agencyViewModel.fetchTrips(selectedAgency!!.agencyId, stopTimes).join()
+                                    agencyViewModel.fetchRoutes(selectedAgency!!.agencyId, trips)
+                                }
                             }
                         )
                     }
@@ -199,11 +211,11 @@ fun StationSelectorScreen(
                     expanded = busDropdownExpanded,
                     onDismissRequest = { busDropdownExpanded = false }
                 ) {
-                    stopTimes.forEach { stopTime ->
+                    routes.forEach { route ->
                         DropdownMenuItem(
-                            text = { Text(stopTime.tripId) },
+                            text = { Text(route.routeShortName + " - " + route.routeLongName) },
                             onClick = {
-                                selectedBus = stopTime.tripId
+                                selectedBus = route.routeShortName + " - " + route.routeLongName
                                 busDropdownExpanded = false
                             }
                         )

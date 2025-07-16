@@ -3,10 +3,13 @@ package com.dash.nextbus.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dash.nextbus.model.Agency
+import com.dash.nextbus.model.Route
 import com.dash.nextbus.model.Stop
 import com.dash.nextbus.model.StopTime
+import com.dash.nextbus.model.Trip
 import com.dash.nextbus.service.RetrofitClient
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -22,6 +25,12 @@ class AgencyViewModel : ViewModel() {
 
     private val _stopTimes = MutableStateFlow<List<StopTime>>(emptyList())
     val stopTimes: StateFlow<List<StopTime>> = _stopTimes
+
+    private val _trips = MutableStateFlow<List<Trip>>(emptyList())
+    val trips: StateFlow<List<Trip>> = _trips
+
+    private val _routes = MutableStateFlow<List<Route>>(emptyList())
+    val routes: StateFlow<List<Route>> = _routes
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
@@ -40,8 +49,8 @@ class AgencyViewModel : ViewModel() {
             }
         }
     }
-    fun fetchStops(agencyId: Int) {
-        viewModelScope.launch {
+    fun fetchStops(agencyId: Int) : Job {
+        return viewModelScope.launch {
             try {
                 _stops.value = RetrofitClient.api.getStops(agencyId)
             } catch (e: Exception) {
@@ -49,8 +58,8 @@ class AgencyViewModel : ViewModel() {
             }
         }
     }
-    fun fetchStopTimes(agencyId: Int, stopId: Int) {
-        viewModelScope.launch {
+    fun fetchStopTimes(agencyId: Int, stopId: Int) : Job {
+        return viewModelScope.launch {
             try {
                 val response = withContext(Dispatchers.IO) {
                     RetrofitClient.api.getStopTimes(agencyId)
@@ -62,6 +71,41 @@ class AgencyViewModel : ViewModel() {
             } catch (e: Exception) {
                 _errorMessage.value = "Error loading stop times: ${e.message}"
             }
+        }
+    }
+
+    fun fetchTrips(agencyId: Int, stopTimes: List<StopTime>) : Job {
+        return viewModelScope.launch {
+            try {
+                val response = withContext(Dispatchers.IO) {
+                    RetrofitClient.api.getTrips(agencyId);
+                }
+                val stopTimesTripIds = stopTimes.map(StopTime::tripId)
+                val filteredTrips = response.filter {
+                    stopTimesTripIds.contains(it.tripId)
+                }
+                _trips.value = filteredTrips
+            } catch (e: Exception) {
+                _errorMessage.value = "Error loading trips: ${e.message}"
+            }
+        }
+    }
+
+    fun fetchRoutes(agencyId: Int, trips: List<Trip>) {
+        viewModelScope.launch {
+            try {
+                val response = withContext(Dispatchers.IO) {
+                    RetrofitClient.api.getRoutes(agencyId)
+                }
+                val tripsRouteIds = trips.map(Trip::routeId)
+                val filteredRoutes = response.filter {
+                    tripsRouteIds.contains(it.routeId)
+                }
+                _routes.value = filteredRoutes
+            } catch (e: Exception) {
+                _errorMessage.value = "Error loading agencies: ${e.message}"
+            }
+
         }
     }
 }

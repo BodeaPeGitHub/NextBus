@@ -5,6 +5,7 @@ import com.dash.nextbus.model.Route
 import com.dash.nextbus.model.Stop
 import com.dash.nextbus.model.StopTime
 import com.dash.nextbus.model.Trip
+import com.dash.nextbus.model.Vehicle
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
 import okhttp3.Interceptor
@@ -31,6 +32,12 @@ interface TranzyApiService {
 
     @GET("opendata/routes")
     suspend fun getRoutes(@Header("X-Agency-Id") agencyId: Int): List<Route>
+
+    @GET("opendata/vehicles")
+    suspend fun getVehicles(
+        @Header("X-Agency-Id") agencyId: Int,
+        @Header("X-Route-Id") routeId: Int
+    ): List<Vehicle>
 }
 
 object RetrofitClient {

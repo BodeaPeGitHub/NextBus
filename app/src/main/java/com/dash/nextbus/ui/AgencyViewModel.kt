@@ -7,6 +7,7 @@ import com.dash.nextbus.model.Route
 import com.dash.nextbus.model.Stop
 import com.dash.nextbus.model.StopTime
 import com.dash.nextbus.model.Trip
+import com.dash.nextbus.model.Vehicle
 import com.dash.nextbus.service.RetrofitClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -31,6 +32,9 @@ class AgencyViewModel : ViewModel() {
 
     private val _routes = MutableStateFlow<List<Route>>(emptyList())
     val routes: StateFlow<List<Route>> = _routes
+
+    private val _vehicles = MutableStateFlow<List<Vehicle>>(emptyList())
+    val vehicles: StateFlow<List<Vehicle>> = _vehicles
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
@@ -106,6 +110,18 @@ class AgencyViewModel : ViewModel() {
                 _errorMessage.value = "Error loading agencies: ${e.message}"
             }
 
+        }
+    }
+    fun fetchVehicles(agencyId: Int, routeId: Int) {
+        viewModelScope.launch {
+            try {
+                val response = withContext(Dispatchers.IO) {
+                    RetrofitClient.api.getVehicles(agencyId, routeId) // API call to fetch buses
+                }
+                _vehicles.value = response
+            } catch (e: Exception) {
+                _errorMessage.value = "Failed to fetch vehicles: ${e.message}"
+            }
         }
     }
 }

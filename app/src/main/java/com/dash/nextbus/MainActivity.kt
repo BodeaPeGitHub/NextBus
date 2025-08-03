@@ -33,6 +33,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dash.nextbus.model.Agency
 import com.dash.nextbus.model.Stop
 import com.dash.nextbus.ui.AgencyViewModel
+import com.dash.nextbus.ui.animations.StopsLineAnimation
 import com.dash.nextbus.ui.theme.NextBusTheme
 import kotlinx.coroutines.launch
 
@@ -49,6 +50,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StationSelectorScreen(
@@ -61,6 +63,8 @@ fun StationSelectorScreen(
     val trips by agencyViewModel.trips.collectAsState()
     val routes by agencyViewModel.routes.collectAsState()
     val error by agencyViewModel.errorMessage.collectAsState()
+    var selectedBusTripId by remember { mutableStateOf<String?>(null) }
+    val stopsForSelectedBus = remember { mutableStateOf<List<Stop>>(emptyList()) }
     val scope = rememberCoroutineScope()
 
     var selectedAgency by remember { mutableStateOf<Agency?>(null) }
@@ -156,7 +160,8 @@ fun StationSelectorScreen(
                                         selectedAgency!!.agencyId,
                                         stop.stopId
                                     ).join()
-                                    agencyViewModel.fetchTrips(selectedAgency!!.agencyId, stopTimes).join()
+                                    agencyViewModel.fetchTrips(selectedAgency!!.agencyId, stopTimes)
+                                        .join()
                                     agencyViewModel.fetchRoutes(selectedAgency!!.agencyId, trips)
                                 }
                             }
@@ -189,7 +194,6 @@ fun StationSelectorScreen(
         if (selectedStop != null) {
             Text("Select Bus:")
 
-            // Bus dropdown
             ExposedDropdownMenuBox(
                 expanded = busDropdownExpanded,
                 onExpandedChange = { busDropdownExpanded = !busDropdownExpanded }
@@ -216,7 +220,20 @@ fun StationSelectorScreen(
                             text = { Text(route.routeShortName + " - " + route.routeLongName) },
                             onClick = {
                                 selectedBus = route.routeShortName + " - " + route.routeLongName
+                                selectedBusTripId = route.routeId.toString()
                                 busDropdownExpanded = false
+
+                                scope.launch {
+                                    selectedAgency?.let { agency ->
+                                        selectedBusTripId?.let { tripId ->
+                                            stopsForSelectedBus.value =
+                                                agencyViewModel.fetchStopsForTrip(
+                                                    agency.agencyId,
+                                                    tripId
+                                                )
+                                        }
+                                    }
+                                }
                             }
                         )
                     }
@@ -241,19 +258,24 @@ fun StationSelectorScreen(
                     Text("• $bus")
                 }
             }
+                    if (stopsForSelectedBus.value.isNotEmpty()) {
+                        Text("Stops for Selected Bus:")
+                        StopsLineAnimation(stopsForSelectedBus.value)
+                    }
+                }
+
+
+                error?.let {
+                    Text("Error: $it", color = MaterialTheme.colorScheme.error)
+                }
+            }
         }
 
-        error?.let {
-            Text("Error: $it", color = MaterialTheme.colorScheme.error)
+
+        @Preview(showBackground = true)
+        @Composable
+        fun StationSelectorScreenPreview() {
+            NextBusTheme {
+                StationSelectorScreen()
+            }
         }
-    }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun StationSelectorScreenPreview() {
-    NextBusTheme {
-        StationSelectorScreen()
-    }
-}

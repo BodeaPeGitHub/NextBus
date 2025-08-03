@@ -124,4 +124,19 @@ class AgencyViewModel : ViewModel() {
             }
         }
     }
+    suspend fun fetchStopsForTrip(agencyId: Int, tripId: String): List<Stop> = withContext(Dispatchers.IO) {
+        try {
+            val allStopTimes = RetrofitClient.api.getStopTimes(agencyId)
+            val stopTimesForTrip = allStopTimes.filter { it.tripId == tripId }
+            val stopIds = stopTimesForTrip.map { it.stopId }
+            val allStops = _stops.value.ifEmpty {
+                RetrofitClient.api.getStops(agencyId)
+            }
+
+            allStops.filter { stopIds.contains(it.stopId) }
+        } catch (e: Exception) {
+            _errorMessage.value = "Error loading stops for trip: ${e.message}"
+            emptyList()
+        }
+    }
 }
